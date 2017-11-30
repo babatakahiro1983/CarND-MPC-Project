@@ -8,6 +8,7 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "MPC.h"
 #include "json.hpp"
+#include<fstream> 
 
 // for convenience
 using json = nlohmann::json;
@@ -71,6 +72,32 @@ int main() {
   // MPC is initialized here!
   MPC mpc;
 
+
+  // Read waypoint
+  ifstream ifs("Test.csv");
+  if (!ifs) {
+	  cout << "入力エラー";
+	  return 1;
+  }
+
+  //csvファイルを1行ずつ読み込む
+  string str;
+  while (getline(ifs, str)) {
+	  string token;
+	  istringstream stream(str);
+
+	  //1行のうち、文字列とコンマを分割する
+	  while (getline(stream, token, ',')) {
+		  //すべて文字列として読み込まれるため
+		  //数値は変換が必要
+		  int temp = stof(token); //stof(string str) : stringをfloatに変換
+		  cout << temp << ",";
+	  }
+	  cout << endl;
+  }
+
+
+
   h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -95,7 +122,7 @@ int main() {
 
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
 		  // and subtracting y.
-		  auto coeffs = polyfit(ptsx, ptsy, 1);
+		  auto coeffs = polyfit(ptsx, ptsy, 3);
 		  double cte = polyeval(coeffs, px) - py;
 
 		  // Due to the sign starting at 0, the orientation error is -f'(x).
