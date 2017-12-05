@@ -138,9 +138,10 @@ int main() {
 
 		  Eigen::VectorXd ptsx_tmp, ptsy_tmp;
 
-      std::cout << "check-1" << std::endl;
+      
 
 		  for (int i = 0; i < ptsx.size(); i++) {
+        std::cout << "size: " << ptsx.size() << std::endl;
 			  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
 			  std::cout << i << "  " << "ptsy: " << ptsy[i] << std::endl;
 			  ptsx_tmp(i) = ptsx[i];
