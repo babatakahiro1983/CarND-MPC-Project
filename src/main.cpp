@@ -74,28 +74,45 @@ int main() {
 
 
   // Read waypoint
-  ifstream ifs("Test.csv");
+  ifstream ifs("../../../lake_track_waypoints.csv");
   if (!ifs) {
 	  cout << "入力エラー";
 	  return 1;
   }
 
-  //csvファイルを1行ずつ読み込む
   string str;
+  int cnt = 0;
+  std::vector<double> x_vec, y_vec;
+
   while (getline(ifs, str)) {
 	  string token;
 	  istringstream stream(str);
+	  int cnt_2 = 0;
 
-	  //1行のうち、文字列とコンマを分割する
 	  while (getline(stream, token, ',')) {
-		  //すべて文字列として読み込まれるため
-		  //数値は変換が必要
-		  int temp = stof(token); //stof(string str) : stringをfloatに変換
-		  cout << temp << ",";
+		  if (cnt > 0) {
+			  double temp = stof(token); 
+			  if (cnt_2 == 0) {
+				  x_vec.push_back(temp);
+			  }
+			  else {
+				  y_vec.push_back(temp);
+			  }
+			  cnt_2 += 1;
+		  }
+
 	  }
+	  cnt += 1;
 	  cout << endl;
   }
 
+  Eigen::VectorXd xvals(x_vec.size());
+  Eigen::VectorXd yvals(y_vec.size());
+
+  for (int i = 0; i < x_vec.size(); i++) {
+	  xvals(i) = x_vec[i];
+	  yvals(i) = y_vec[i];
+  }
 
 
   h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
