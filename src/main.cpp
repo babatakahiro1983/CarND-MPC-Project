@@ -136,10 +136,19 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+		  Eigen::VectorXd ptsx_tmp, ptsy_tmp;
+
+		  for (int i = 0; i < ptsx.size(); i++) {
+			  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
+			  std::cout << i << "  " << "ptsy: " << ptsy[i] << std::endl;
+			  ptsx_tmp(i) = ptsx[i];
+			  ptsy_tmp(i) = ptsy[i];
+		  }
+
 
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
 		  // and subtracting y.
-		  auto coeffs = polyfit(ptsx, ptsy, 3);
+		  auto coeffs = polyfit(ptsx_tmp, ptsy_tmp, 3);
 		  double cte = polyeval(coeffs, px) - py;
 
 		  // Due to the sign starting at 0, the orientation error is -f'(x).
