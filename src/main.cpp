@@ -136,7 +136,7 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
-		  Eigen::VectorXd ptsx_tmp, ptsy_tmp;
+		  Eigen::VectorXd ptsx_tmp(6), ptsy_tmp(6);
 
       
 
