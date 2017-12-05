@@ -136,25 +136,22 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
-		  Eigen::VectorXd ptsx_tmp(6), ptsy_tmp(6);
+		  Eigen::VectorXd ptsx_tmp(ptsx.size()), ptsy_tmp(ptsy.size());
 
       
 
 		  for (int i = 0; i < ptsx.size(); i++) {
-        std::cout << "size: " << ptsx.size() << std::endl;
 			  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
 			  std::cout << i << "  " << "ptsy: " << ptsy[i] << std::endl;
 			  ptsx_tmp(i) = ptsx[i];
 			  ptsy_tmp(i) = ptsy[i];
 		  }
 
-      std::cout << "check0" << std::endl;
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
 		  // and subtracting y.
 		  auto coeffs = polyfit(ptsx_tmp, ptsy_tmp, 3);
 		  double cte = polyeval(coeffs, px) - py;
 
-      std::cout << "check1" << std::endl;
 
 		  // Due to the sign starting at 0, the orientation error is -f'(x).
 		  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
@@ -173,7 +170,6 @@ int main() {
           double steer_value;
           double throttle_value;
 
-          std::cout << "check2" << std::endl;
 
 
 		  auto vars = mpc.Solve(state, coeffs);
@@ -190,7 +186,6 @@ int main() {
 		  steer_value = vars[6];
 		  throttle_value = vars[7];
 
-      std::cout << "check3" << std::endl;
 
 		  // Guard 
 		  if (steer_value > 1) {
@@ -207,7 +202,6 @@ int main() {
 			  throttle_value = -1;
 		  }
 
-      std::cout << "check4" << std::endl;
 
 
           json msgJson;
@@ -252,7 +246,6 @@ int main() {
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
-        std::cout << "check5" << std::endl;
 
         // Manual driving
         std::string msg = "42[\"manual\",{}]";
