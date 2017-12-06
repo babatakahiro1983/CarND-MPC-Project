@@ -138,7 +138,24 @@ int main() {
 
 		  Eigen::VectorXd ptsx_tmp(ptsx.size()), ptsy_tmp(ptsy.size());
 
-      
+		  // cordinate transformation
+		  for (int i = 0; i < ptsx.size(); i++) {
+			  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
+			  std::cout << i << "  " << "ptsy: " << ptsy[i] << std::endl;
+		 
+			  double x_tmp = ptsx[i] - px;
+			  double y_tmp = ptsy[i] - py;
+			  ptsx[i] = (x_tmp * cos(0 - psi) - y_tmp * sin(0 - psi));
+			  ptsy[i] = (x_tmp * sin(0 - psi) + y_tmp * cos(0 - psi));
+		  
+		  }
+
+		  //double* ptrx = &ptsx[0];
+		  //Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
+
+		  //double* ptry = &ptsy[0];
+		  //Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
+
 
 		  for (int i = 0; i < ptsx.size(); i++) {
 			  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
@@ -150,16 +167,16 @@ int main() {
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
 		  // and subtracting y.
 		  auto coeffs = polyfit(ptsx_tmp, ptsy_tmp, 3);
-		  double cte = polyeval(coeffs, px) - py;
+		  double cte = polyeval(coeffs, 0);
 
 
 		  // Due to the sign starting at 0, the orientation error is -f'(x).
 		  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
-		  double epsi = psi - atan(coeffs[1]);
+		  double epsi = - atan(coeffs[1]);
 
 
 		  Eigen::VectorXd state(6);
-		  state << px, py, psi, v, cte, epsi;
+		  state << 0, 0, 0, v, cte, epsi;
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -174,40 +191,40 @@ int main() {
 
 		  auto vars = mpc.Solve(state, coeffs);
 
-		  std::cout << "x = " << vars[0] << std::endl;
-		  std::cout << "y = " << vars[1] << std::endl;
-		  std::cout << "psi = " << vars[2] << std::endl;
-		  std::cout << "v = " << vars[3] << std::endl;
-		  std::cout << "cte = " << vars[4] << std::endl;
-		  std::cout << "epsi = " << vars[5] << std::endl;
-		  std::cout << "delta = " << vars[6] << std::endl;
-		  std::cout << "a = " << vars[7] << std::endl;
+		  //std::cout << "x = " << vars[0] << std::endl;
+		  //std::cout << "y = " << vars[1] << std::endl;
+		  //std::cout << "psi = " << vars[2] << std::endl;
+		  //std::cout << "v = " << vars[3] << std::endl;
+		  //std::cout << "cte = " << vars[4] << std::endl;
+		  //std::cout << "epsi = " << vars[5] << std::endl;
+		  //std::cout << "delta = " << vars[6] << std::endl;
+		  //std::cout << "a = " << vars[7] << std::endl;
 
 		  steer_value = vars[6];
 		  throttle_value = vars[7];
 
 
 		  // Guard 
-		  if (steer_value > 1) {
-			  steer_value = 1;
-		  }
-		  if (steer_value < -1) {
-			  steer_value = -1;
-		  }
+		  //if (steer_value > 1) {
+			 // steer_value = 1;
+		  //}
+		  //if (steer_value < -1) {
+			 // steer_value = -1;
+		  //}
 
-		  if (throttle_value > 1) {
-			  throttle_value = 1;
-		  }
-		  if (throttle_value < -1) {
-			  throttle_value = -1;
-		  }
+		  //if (throttle_value > 1) {
+			 // throttle_value = 1;
+		  //}
+		  //if (throttle_value < -1) {
+			 // throttle_value = -1;
+		  //}
 
 
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value;
+          msgJson["steering_angle"] = steer_value / deg2rad(25);
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
