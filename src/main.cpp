@@ -200,8 +200,8 @@ int main() {
 		  //std::cout << "delta = " << vars[6] << std::endl;
 		  //std::cout << "a = " << vars[7] << std::endl;
 
-		  steer_value = vars[6];
-		  throttle_value = vars[7];
+		  steer_value = vars[0];
+		  throttle_value = vars[1];
 
 
 		  // Guard 
@@ -219,12 +219,12 @@ int main() {
 			 // throttle_value = -1;
 		  //}
 
-
+		  double Lf = 2.67;
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value / deg2rad(25);
+          msgJson["steering_angle"] = steer_value / (deg2rad(25)*Lf);
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
