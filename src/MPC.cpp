@@ -117,12 +117,12 @@ class FG_eval {
 		  // epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
 		  fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
 		  fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
-		  fg[1 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
+		  fg[1 + psi_start + t] = psi1 - (psi0 - v0 * delta0 / Lf * dt);
 		  fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
 		  fg[1 + cte_start + t] =
 			  cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
 		  fg[1 + epsi_start + t] =
-			  epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
+			  epsi1 - ((psi0 - psides0) - v0 * delta0 / Lf * dt);
 	  }
 
   }
@@ -162,13 +162,13 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     vars[i] = 0;
   }
 
-  // Set the initial variable values
-  vars[x_start] = x;
-  vars[y_start] = y;
-  vars[psi_start] = psi;
-  vars[v_start] = v;
-  vars[cte_start] = cte;
-  vars[epsi_start] = epsi;
+  //// Set the initial variable values
+  //vars[x_start] = x;
+  //vars[y_start] = y;
+  //vars[psi_start] = psi;
+  //vars[v_start] = v;
+  //vars[cte_start] = cte;
+  //vars[epsi_start] = epsi;
 
   // TODO: Set lower and upper limits for variables.
   Dvector vars_lowerbound(n_vars);
@@ -254,7 +254,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   // Cost
   auto cost = solution.obj_value;
-  std::cout << "Cost " << cost << std::endl;
+  //std::cout << "Cost " << cost << std::endl;
 
   // TODO: Return the first actuator values. The variables can be accessed with
   // `solution.x[i]`.

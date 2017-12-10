@@ -8,7 +8,6 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "MPC.h"
 #include "json.hpp"
-#include<fstream> 
 
 // for convenience
 using json = nlohmann::json;
@@ -72,56 +71,13 @@ int main() {
   // MPC is initialized here!
   MPC mpc;
 
-
-  // Read waypoint
-  //ifstream ifs("../../../lake_track_waypoints.csv");
-  //if (!ifs) {
-	//  cout << "“ü—ÍƒGƒ‰[";
-	//  return 1;
-  //}
-
-  //string str;
-  //int cnt = 0;
-  //std::vector<double> x_vec, y_vec;
-
-  //while (getline(ifs, str)) {
-	//  string token;
-	//  istringstream stream(str);
-	//  int cnt_2 = 0;
-
-	//  while (getline(stream, token, ',')) {
-	//	  if (cnt > 0) {
-	//		  double temp = stof(token); 
-	//		  if (cnt_2 == 0) {
-	//			  x_vec.push_back(temp);
-	//		  }
-	//		  else {
-	//			  y_vec.push_back(temp);
-	//		  }
-	//		  cnt_2 += 1;
-	//	  }
-
-	//  }
-	//  cnt += 1;
-	//  cout << endl;
-  //}
-
-  //Eigen::VectorXd xvals(x_vec.size());
-  //Eigen::VectorXd yvals(y_vec.size());
-
-  //for (int i = 0; i < x_vec.size(); i++) {
-	//  xvals(i) = x_vec[i];
-	//  yvals(i) = y_vec[i];
-  //}
-
-
   h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     string sdata = string(data).substr(0, length);
-    cout << sdata << endl;
+    //cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
       string s = hasData(sdata);
       if (s != "") {
@@ -136,7 +92,10 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
-		  Eigen::VectorXd ptsx_tmp(ptsx.size()), ptsy_tmp(ptsy.size());
+		  Eigen::VectorXd ptsx_tmp(ptsx.size());
+		  Eigen::VectorXd ptsy_tmp(ptsy.size());
+		  vector<double> ptsx_conv;
+		  vector<double> ptsy_conv;
 
 		  // cordinate transformation
 		  for (int i = 0; i < ptsx.size(); i++) {
@@ -145,9 +104,8 @@ int main() {
 		 
 			  double x_tmp = ptsx[i] - px;
 			  double y_tmp = ptsy[i] - py;
-			  ptsx[i] = (x_tmp * cos(0 - psi) - y_tmp * sin(0 - psi));
-			  ptsy[i] = (x_tmp * sin(0 - psi) + y_tmp * cos(0 - psi));
-		  
+			  ptsx_conv.push_back(x_tmp * cos(0 - psi) - y_tmp * sin(0 - psi));
+			  ptsy_conv.push_back(x_tmp * sin(0 - psi) + y_tmp * cos(0 - psi));
 		  }
 
 		  //double* ptrx = &ptsx[0];
@@ -157,11 +115,11 @@ int main() {
 		  //Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
 
 
-		  for (int i = 0; i < ptsx.size(); i++) {
-			  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
-			  std::cout << i << "  " << "ptsy: " << ptsy[i] << std::endl;
-			  ptsx_tmp(i) = ptsx[i];
-			  ptsy_tmp(i) = ptsy[i];
+		  for (int i = 0; i < ptsx_conv.size(); i++) {
+			  std::cout << i << "  " << "ptsx_conv: " << ptsx_conv[i] << std::endl;
+			  std::cout << i << "  " << "ptsy_conv: " << ptsy_conv[i] << std::endl;
+			  ptsx_tmp(i) = ptsx_conv[i];
+			  ptsy_tmp(i) = ptsy_conv[i];
 		  }
 
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
@@ -174,6 +132,9 @@ int main() {
 		  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
 		  double epsi = - atan(coeffs[1]);
 
+		  double steer_value = j[1]["steering_angle"];
+		  double throttle_value = j[1]["throttle"];
+
 
 		  Eigen::VectorXd state(6);
 		  state << 0, 0, 0, v, cte, epsi;
@@ -184,10 +145,6 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
-
-
 
 		  auto vars = mpc.Solve(state, coeffs);
 
@@ -202,22 +159,6 @@ int main() {
 
 		  steer_value = vars[0];
 		  throttle_value = vars[1];
-
-
-		  // Guard 
-		  //if (steer_value > 1) {
-			 // steer_value = 1;
-		  //}
-		  //if (steer_value < -1) {
-			 // steer_value = -1;
-		  //}
-
-		  //if (throttle_value > 1) {
-			 // throttle_value = 1;
-		  //}
-		  //if (throttle_value < -1) {
-			 // throttle_value = -1;
-		  //}
 
 		  double Lf = 2.67;
 
@@ -234,6 +175,15 @@ int main() {
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
+		  for (int i = 2; i < vars.size(); i++) {
+			  if (i % 2 == 0) {
+				  mpc_x_vals.push_back(vars[i]);
+			  }
+			  else {
+				  mpc_y_vals.push_back(vars[i]);
+			  }
+		  }
+
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
 
@@ -241,15 +191,23 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
+		  double poly_inc = 2.5;
+		  int num_points = 25;
+
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
+
+		  for (double i = 1; i < num_points; i++) {
+			  next_x_vals.push_back(poly_inc*i);
+			  next_y_vals.push_back(polyeval(coeffs, poly_inc*i));
+		  }
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          //std::cout << msg << std::endl;
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
