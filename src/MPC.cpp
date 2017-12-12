@@ -99,8 +99,10 @@ class FG_eval {
 		  AD<double> epsi0 = vars[epsi_start + t - 1];
 
 		  // Only consider the actuation at time t.
-		  AD<double> delta0 = vars[delta_start + t - 1];
-		  AD<double> a0 = vars[a_start + t - 1];
+		  if (t > 1) {
+			  AD<double> delta0 = vars[delta_start + t - 2];
+			  AD<double> a0 = vars[a_start + t - 2];
+		  }
 
 		  AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 * x0 + coeffs[3] * x0 * x0 * x0;
 		  AD<double> psides0 = CppAD::atan(3 * coeffs[3] * x0 * x0 + 2 * coeffs[2] * x0 + coeffs[1]);
@@ -162,17 +164,17 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     vars[i] = 0;
   }
 
-  //// Set the initial variable values
-  //vars[x_start] = x;
-  //vars[y_start] = y;
-  //vars[psi_start] = psi;
-  //vars[v_start] = v;
-  //vars[cte_start] = cte;
-  //vars[epsi_start] = epsi;
-
   // TODO: Set lower and upper limits for variables.
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);
+
+  // Set the initial variable values
+  vars[x_start] = x;
+  vars[y_start] = y;
+  vars[psi_start] = psi;
+  vars[v_start] = v;
+  vars[cte_start] = cte;
+  vars[epsi_start] = epsi;
 
   // Set all non-actuators upper and lowerlimits
   // to the max negative and positive values.
