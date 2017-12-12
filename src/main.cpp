@@ -98,15 +98,15 @@ int main() {
 		  vector<double> ptsy_conv;
 
 		  // cordinate transformation
-		  for (int i = 0; i < ptsx.size(); i++) {
-			  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
-			  std::cout << i << "  " << "ptsy: " << ptsy[i] << std::endl;
+		  //for (int i = 0; i < ptsx.size(); i++) {
+			//  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
+			//  std::cout << i << "  " << "ptsy: " << ptsy[i] << std::endl;
 		 
-			  double x_tmp = ptsx[i] - px;
-			  double y_tmp = ptsy[i] - py;
-			  ptsx_conv.push_back(x_tmp * cos(0 - psi) - y_tmp * sin(0 - psi));
-			  ptsy_conv.push_back(x_tmp * sin(0 - psi) + y_tmp * cos(0 - psi));
-		  }
+			//  double x_tmp = ptsx[i] - px;
+			//  double y_tmp = ptsy[i] - py;
+			//  ptsx_conv.push_back(x_tmp * cos(0 - psi) - y_tmp * sin(0 - psi));
+			//  ptsy_conv.push_back(x_tmp * sin(0 - psi) + y_tmp * cos(0 - psi));
+		 // }
 
 		  //double* ptrx = &ptsx[0];
 		  //Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
@@ -115,16 +115,37 @@ int main() {
 		  //Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
 
 
-		  for (int i = 0; i < ptsx_conv.size(); i++) {
-			  std::cout << i << "  " << "ptsx_conv: " << ptsx_conv[i] << std::endl;
-			  std::cout << i << "  " << "ptsy_conv: " << ptsy_conv[i] << std::endl;
-			  ptsx_tmp(i) = ptsx_conv[i];
-			  ptsy_tmp(i) = ptsy_conv[i];
-		  }
+		  //for (int i = 0; i < ptsx_conv.size(); i++) {
+			//  std::cout << i << "  " << "ptsx_conv: " << ptsx_conv[i] << std::endl;
+			//  std::cout << i << "  " << "ptsy_conv: " << ptsy_conv[i] << std::endl;
+			//  ptsx_tmp(i) = ptsx_conv[i];
+			//  ptsy_tmp(i) = ptsy_conv[i];
+		  //}
+
+
+                vector<double> waypoints_x;
+          vector<double> waypoints_y;
+
+          // transform waypoints to be from car's perspective
+          // this means we can consider px = 0, py = 0, and psi = 0
+          // greatly simplifying future calculations
+          for (int i = 0; i < ptsx.size(); i++) {
+            double dx = ptsx[i] - px;
+            double dy = ptsy[i] - py;
+            waypoints_x.push_back(dx * cos(-psi) - dy * sin(-psi));
+            waypoints_y.push_back(dx * sin(-psi) + dy * cos(-psi));
+          }
+
+          double* ptrx = &waypoints_x[0];
+          double* ptry = &waypoints_y[0];
+          Eigen::Map<Eigen::VectorXd> waypoints_x_eig(ptrx, 6);
+          Eigen::Map<Eigen::VectorXd> waypoints_y_eig(ptry, 6);
+
+          auto coeffs = polyfit(waypoints_x_eig, waypoints_y_eig, 3);
 
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
 		  // and subtracting y.
-		  auto coeffs = polyfit(ptsx_tmp, ptsy_tmp, 3);
+		  //auto coeffs = polyfit(ptsx_tmp, ptsy_tmp, 3);
 		  double cte = polyeval(coeffs, 0);
 
 
