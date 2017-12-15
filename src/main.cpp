@@ -92,6 +92,9 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+		  double steer_value_input = j[1]["steering_angle"];
+		  double throttle_value_input = j[1]["throttle"];
+
 		  Eigen::VectorXd ptsx_tmp(ptsx.size());
 		  Eigen::VectorXd ptsy_tmp(ptsy.size());
 		  vector<double> ptsx_conv;
@@ -146,6 +149,15 @@ int main() {
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
 		  // and subtracting y.
 		  //auto coeffs = polyfit(ptsx_tmp, ptsy_tmp, 3);
+
+		  double predicted_x = 0 + v * mpc.latency;
+		  double predicted_y = 0;
+
+		  double predicted_orient = 0 - (v / 2.67 * steer_value_input * mpc.latency);
+		  double predicted_v = v + (throttle_value_input * mpc.latency);
+
+
+
 		  double cte = polyeval(coeffs, 0);
 
 
@@ -153,12 +165,18 @@ int main() {
 		  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
 		  double epsi = - atan(coeffs[1]);
 
-		  double steer_value = j[1]["steering_angle"];
-		  double throttle_value = j[1]["throttle"];
+		  double predicted_cte = cte + (v * sin(epsi) * mpc.latency);
+		  double predicted_epsi = epsi - (v / 2.67 * steer_value_input * mpc.latency);
+		  
+
+
+
 
 
 		  Eigen::VectorXd state(6);
-		  state << 0, 0, 0, v, cte, epsi;
+		  //state << 0, 0, 0, v, cte, epsi;
+		  state << predicted_x, predicted_y, predicted_orient, predicted_v,
+			  predicted_cte, predicted_epsi;
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -178,16 +196,16 @@ int main() {
 		  //std::cout << "delta = " << vars[6] << std::endl;
 		  //std::cout << "a = " << vars[7] << std::endl;
 
-		  steer_value = vars[0];
-		  throttle_value = vars[1];
+		  //steer_value = vars[0];
+		  //throttle_value = vars[1];
 
 		  double Lf = 2.67;
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = -steer_value / (deg2rad(25));
-          msgJson["throttle"] = throttle_value;
+          msgJson["steering_angle"] = -vars[0] / (deg2rad(25));
+          msgJson["throttle"] = vars[1];
 
           //Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;

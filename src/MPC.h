@@ -8,6 +8,11 @@ using namespace std;
 
 class MPC {
  public:
+	 double latency;
+
+	 double prev_d;
+	 double prev_a;
+
   MPC();
 
   virtual ~MPC();
