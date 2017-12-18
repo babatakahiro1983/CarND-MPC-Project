@@ -95,68 +95,32 @@ int main() {
 		  double steer_value_input = j[1]["steering_angle"];
 		  double throttle_value_input = j[1]["throttle"];
 
-		  Eigen::VectorXd ptsx_tmp(ptsx.size());
-		  Eigen::VectorXd ptsy_tmp(ptsy.size());
+
 		  vector<double> ptsx_conv;
 		  vector<double> ptsy_conv;
 
 		  // cordinate transformation
-		  //for (int i = 0; i < ptsx.size(); i++) {
-			//  std::cout << i << "  " << "ptsx: " << ptsx[i] << std::endl;
-			//  std::cout << i << "  " << "ptsy: " << ptsy[i] << std::endl;
-		 
-			//  double x_tmp = ptsx[i] - px;
-			//  double y_tmp = ptsy[i] - py;
-			//  ptsx_conv.push_back(x_tmp * cos(0 - psi) - y_tmp * sin(0 - psi));
-			//  ptsy_conv.push_back(x_tmp * sin(0 - psi) + y_tmp * cos(0 - psi));
-		 // }
-
-		  //double* ptrx = &ptsx[0];
-		  //Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
-
-		  //double* ptry = &ptsy[0];
-		  //Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
-
-
-		  //for (int i = 0; i < ptsx_conv.size(); i++) {
-			//  std::cout << i << "  " << "ptsx_conv: " << ptsx_conv[i] << std::endl;
-			//  std::cout << i << "  " << "ptsy_conv: " << ptsy_conv[i] << std::endl;
-			//  ptsx_tmp(i) = ptsx_conv[i];
-			//  ptsy_tmp(i) = ptsy_conv[i];
-		  //}
-
-
-                vector<double> waypoints_x;
-          vector<double> waypoints_y;
-
-          // transform waypoints to be from car's perspective
-          // this means we can consider px = 0, py = 0, and psi = 0
-          // greatly simplifying future calculations
           for (int i = 0; i < ptsx.size(); i++) {
             double dx = ptsx[i] - px;
             double dy = ptsy[i] - py;
-            waypoints_x.push_back(dx * cos(-psi) - dy * sin(-psi));
-            waypoints_y.push_back(dx * sin(-psi) + dy * cos(-psi));
+			ptsx_conv.push_back(dx * cos(-psi) - dy * sin(-psi));
+			ptsy_conv.push_back(dx * sin(-psi) + dy * cos(-psi));
           }
 
-          double* ptrx = &waypoints_x[0];
-          double* ptry = &waypoints_y[0];
-          Eigen::Map<Eigen::VectorXd> waypoints_x_eig(ptrx, 6);
-          Eigen::Map<Eigen::VectorXd> waypoints_y_eig(ptry, 6);
-
-          auto coeffs = polyfit(waypoints_x_eig, waypoints_y_eig, 3);
+          double* ptrx = &ptsx_conv[0];
+          double* ptry = &ptsy_conv[0];
+          Eigen::Map<Eigen::VectorXd> ptsx_conv_vector(ptrx, 6);
+          Eigen::Map<Eigen::VectorXd> ptsy_conv_vector(ptry, 6);
 
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
 		  // and subtracting y.
-		  //auto coeffs = polyfit(ptsx_tmp, ptsy_tmp, 3);
+		  auto coeffs = polyfit(ptsx_conv_vector, ptsy_conv_vector, 3);
 
+		  // Consideration of latency
 		  double predicted_x = 0 + v * mpc.latency;
 		  double predicted_y = 0;
-
 		  double predicted_orient = 0 - (v / 2.67 * steer_value_input * mpc.latency);
 		  double predicted_v = v + (throttle_value_input * mpc.latency);
-
-
 
 		  double cte = polyeval(coeffs, 0);
 
@@ -165,16 +129,12 @@ int main() {
 		  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
 		  double epsi = - atan(coeffs[1]);
 
+		  // Consideration of latency
 		  double predicted_cte = cte + (v * sin(epsi) * mpc.latency);
 		  double predicted_epsi = epsi - (v / 2.67 * steer_value_input * mpc.latency);
 		  
 
-
-
-
-
 		  Eigen::VectorXd state(6);
-		  //state << 0, 0, 0, v, cte, epsi;
 		  state << predicted_x, predicted_y, predicted_orient, predicted_v,
 			  predicted_cte, predicted_epsi;
 
@@ -186,20 +146,6 @@ int main() {
           */
 
 		  auto vars = mpc.Solve(state, coeffs);
-
-		  //std::cout << "x = " << vars[0] << std::endl;
-		  //std::cout << "y = " << vars[1] << std::endl;
-		  //std::cout << "psi = " << vars[2] << std::endl;
-		  //std::cout << "v = " << vars[3] << std::endl;
-		  //std::cout << "cte = " << vars[4] << std::endl;
-		  //std::cout << "epsi = " << vars[5] << std::endl;
-		  //std::cout << "delta = " << vars[6] << std::endl;
-		  //std::cout << "a = " << vars[7] << std::endl;
-
-		  //steer_value = vars[0];
-		  //throttle_value = vars[1];
-
-		  double Lf = 2.67;
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
