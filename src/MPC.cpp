@@ -22,7 +22,7 @@ double dt = 0.1;
 const double Lf = 2.67;
 
 // The reference velocity is set to 40 mph.
-double ref_v = 20;
+double ref_v = 40;
 double ref_cte = 0;
 double ref_epsi = 0;
 
@@ -63,13 +63,13 @@ class FG_eval {
 	  // Minimize the use of actuators.
 	  for (int t = 0; t < N - 1; t++) {
 		  fg[0] += 5000 * CppAD::pow(vars[delta_start + t], 2);
-		  fg[0] += 5 * CppAD::pow(vars[a_start + t], 2);
+		  fg[0] += 1 * CppAD::pow(vars[a_start + t], 2);
 	  }
 
 	  // Minimize the use of actuators.
 	  for (int t = 0; t < N - 2; t++) {
 		  fg[0] += 5000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-		  fg[0] += 10 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+		  fg[0] += 1 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
 	  }
 
 	  // Initial constraints
