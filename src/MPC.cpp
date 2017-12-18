@@ -22,7 +22,7 @@ double dt = 0.1;
 const double Lf = 2.67;
 
 // The reference velocity is set to 40 mph.
-double ref_v = 40;
+double ref_v = 30;
 double ref_cte = 0;
 double ref_epsi = 0;
 
