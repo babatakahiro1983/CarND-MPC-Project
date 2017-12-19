@@ -115,21 +115,17 @@ int main() {
 		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
 		  // and subtracting y.
 		  auto coeffs = polyfit(ptsx_conv_vector, ptsy_conv_vector, 3);
+		  double cte = polyeval(coeffs, 0);
+
+		  // Due to the sign starting at 0, the orientation error is -f'(x).
+		  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
+		  double epsi = -atan(coeffs[1]);
 
 		  // Consideration of latency
 		  double predicted_x = 0 + v * mpc.latency;
 		  double predicted_y = 0;
 		  double predicted_orient = 0 - (v / 2.67 * steer_value_input * mpc.latency);
 		  double predicted_v = v + (throttle_value_input * mpc.latency);
-
-		  double cte = polyeval(coeffs, 0);
-
-
-		  // Due to the sign starting at 0, the orientation error is -f'(x).
-		  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
-		  double epsi = - atan(coeffs[1]);
-
-		  // Consideration of latency
 		  double predicted_cte = cte + (v * sin(epsi) * mpc.latency);
 		  double predicted_epsi = epsi - (v / 2.67 * steer_value_input * mpc.latency);
 		  
